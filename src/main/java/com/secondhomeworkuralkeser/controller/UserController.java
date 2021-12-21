@@ -5,10 +5,9 @@ import com.secondhomeworkuralkeser.dto.UserDto;
 import com.secondhomeworkuralkeser.entity.User;
 import com.secondhomeworkuralkeser.service.UserEntityService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -18,17 +17,94 @@ public class UserController {
     @Autowired
     UserEntityService userEntityService;
 
-    //2.1:Tüm kullanıcıları getiren servis.
+    //2.1
     @GetMapping("/allUsers")
-    public List<User> findAll(){
+    public List<UserDto> findAll(){
 
         List<User> userList = userEntityService.findAll();
 
-//        List<UserDto> userDtoList = UserConverter.INSTANCE.convertAllUserListToUserDtoList(userList);
+        List<UserDto> userDtoList = UserConverter.INSTANCE.convertAllUserListToUserDtoList(userList);
 
-        return userList;
+        return userDtoList;
+    }
+
+    //2.2
+    @GetMapping("/userName/{userName}")
+    public List<UserDto> findByUserName(@PathVariable String userName){
+
+        List<User> user = userEntityService.findByUserName(userName);
+
+        List<UserDto> userDtoList = UserConverter.INSTANCE.convertAllUserListToUserDtoList(user);
+
+        return userDtoList;
+    }
+
+    //2.3
+    @GetMapping("/phoneNumber/{phoneNumber}")
+    public List<UserDto> findByPhoneNumber(@PathVariable String phoneNumber){
+
+        List<User> user = userEntityService.findByPhoneNumber(phoneNumber);
+
+        List<UserDto> userDtoList = UserConverter.INSTANCE.convertAllUserListToUserDtoList(user);
+
+        return userDtoList;
     }
 
 
+    @PostMapping("")
+    public void saveUser(@RequestBody UserDto userDto){ //TODO: Input değeri dto tipinde olmalı
 
+        try {
+
+            User user = UserConverter.INSTANCE.convertAllUserDtoListToUserList(userDto);
+
+            user = userEntityService.save(user);
+
+        }
+        catch(Exception e){
+
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{userName}/{phoneNumber}")
+    public String deleteUser(@PathVariable ("userName")String userName,@PathVariable ("phoneNumber") String phoneNumber){
+
+        List<User> userList = userEntityService.findByPhoneNumber(phoneNumber);
+
+        List<User> user2List = userEntityService.findByUserName(userName);
+
+        User user1 = userList.get(0);
+
+        User user2 = user2List.get(0);
+
+        if(user1== null || user2==null){
+            return "User not found";
+        }
+
+        if(user1.getId() == user2.getId() ){
+            userEntityService.deleteById(user1.getId());
+            return "User has been deleted";
+        }
+        else{
+            return "infos not matched";
+        }
+    }
+
+    @PutMapping("")
+    public List<UserDto> update(@RequestBody UserDto userDto){
+
+        User user = UserConverter.INSTANCE.convertAllUserDtoListToUserList(userDto);
+
+        userEntityService.save(user);
+
+        List<User> userList=new ArrayList<User>();
+
+        userList.add(user);
+
+        List<UserDto> userDtoList = UserConverter.INSTANCE.convertAllUserListToUserDtoList(userList);
+
+        return userDtoList;
+
+    }
 }
